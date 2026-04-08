@@ -5,27 +5,12 @@ env = SmartTrafficEnv()
 agent = SmartAgent()
 
 def reset():
-    try:
-        state = env.reset()
-        return {"state": state}
-    except Exception as e:
-        return {"error": str(e)}
+    return env.reset()
 
 def step(action):
-    try:
-        state, reward, done, info = env.step(int(action))
-        return {
-            "state": state,
-            "reward": reward,
-            "done": done,
-            "info": info
-        }
-    except Exception as e:
-        return {"error": str(e)}
+    state, reward, done, info = env.step(int(action))
+    return state, reward, done, info
 
 def act(state):
-    try:
-        action = agent.choose_action(state)
-        return {"action": action}
-    except Exception as e:
+    return agent.choose_action(state)
         return {"error": str(e)}
