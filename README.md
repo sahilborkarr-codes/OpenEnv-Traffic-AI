@@ -29,18 +29,11 @@ Smart Agent vs Random Agent:
 * Smart Score: -117
   👉 Significant improvement observed
 
-## 🖥️ Demo
-
-Run locally:
-
-```
-streamlit run app.py
-```
 
 ## 🛠️ Tech Stack
 
 * Python
-* Streamlit
+* Gradio
 * OpenEnv concepts
 
 ## 🚀 Future Scope
