@@ -4,10 +4,13 @@ from agent import SmartAgent
 env = SmartTrafficEnv()
 agent = SmartAgent()
 
+# Reset environment
 def reset():
-    return env.reset()
+    state = env.reset()
+    return {"state": state}
 
-def step(action):
+# Take action
+def step(action: int):
     state, reward, done, info = env.step(action)
     return {
         "state": state,
@@ -16,5 +19,7 @@ def step(action):
         "info": info
     }
 
+# Agent action
 def act(state):
-    return agent.choose_action(state)
+    action = agent.choose_action(state)
+    return {"action": action}
