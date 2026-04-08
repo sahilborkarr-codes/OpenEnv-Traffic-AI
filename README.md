@@ -41,3 +41,4 @@ Smart Agent vs Random Agent:
 * Multi-signal system
 * Real-time traffic data integration
 * Reinforcement learning model
+* Multiple Emergency vehicles (Firetrucks,police vehicles,etc)
