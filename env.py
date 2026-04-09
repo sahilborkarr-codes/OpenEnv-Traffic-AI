@@ -2,55 +2,46 @@ import random
 
 class SmartTrafficEnv:
     def __init__(self):
-        self.reset()
+        self.cars_left = 0
+        self.cars_right = 0
+        self.ambulance = 0
 
+    # ✅ FIXED RESET
     def reset(self):
-        # Initial state
         self.cars_left = random.randint(5, 15)
         self.cars_right = random.randint(5, 15)
-        self.ambulance = random.choice([0, 1])  # 1 = present
+        self.ambulance = random.choice([0, 1])
 
-        return self.state()
+        # ⚠️ MUST RETURN LIST
+        return [self.cars_left, self.cars_right, self.ambulance]
 
-    def state(self):
-        return {
-            "cars_left": self.cars_left,
-            "cars_right": self.cars_right,
-            "ambulance": self.ambulance
-        }
-
+    # ✅ FIXED STEP
     def step(self, action):
-        """
-        Actions:
-        0 = Green Left
-        1 = Green Right
-        2 = Priority Ambulance
-        """
-
         reward = 0
 
-        # 🚑 Ambulance logic
+        # Ambulance logic
         if self.ambulance == 1:
             if action == 2:
-                reward += 100  # best action
+                reward += 100
                 self.ambulance = 0
             else:
-                reward -= 50  # bad decision
+                reward -= 50
 
-        # 🚗 Traffic movement
+        # Traffic movement
         if action == 0:
             self.cars_left = max(0, self.cars_left - random.randint(2, 5))
         elif action == 1:
             self.cars_right = max(0, self.cars_right - random.randint(2, 5))
 
-        # New cars arrive
+        # New cars
         self.cars_left += random.randint(0, 3)
         self.cars_right += random.randint(0, 3)
 
-        # Reward for reducing traffic
         reward -= (self.cars_left + self.cars_right)
 
-        # Episode never ends (for now)
-        done = False
+        next_state = [self.cars_left, self.cars_right, self.ambulance]
 
-        return self.state(), reward, done, {}
+        done = False
+        info = {}
+
+        return next_state, reward, done, info
