@@ -1,8 +1,6 @@
 class SmartAgent:
     def choose_action(self, state):
-        cars_left = state["cars_left"]
-        cars_right = state["cars_right"]
-        ambulance = state["ambulance"]
+        cars_left, cars_right, ambulance = state
 
         if ambulance == 1:
             return 2
