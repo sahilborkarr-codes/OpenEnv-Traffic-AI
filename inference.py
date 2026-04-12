@@ -2,21 +2,28 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
+state = {}
 
-@app.route("/", methods=["GET"])
-def home():
-    return "OK"
-
+# RESET (VERY IMPORTANT FORMAT)
 @app.route("/reset", methods=["POST"])
 def reset():
     global state
-    state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
-    return jsonify({"state": state})
+    state = {
+        "cars_left": 5,
+        "cars_right": 5,
+        "ambulance": 0
+    }
 
+    return jsonify({
+        "observation": state
+    })
+
+
+# STEP (VERY IMPORTANT FORMAT)
 @app.route("/step", methods=["POST"])
 def step():
     global state
+
     data = request.get_json(force=True)
     action = data.get("action", 0)
 
@@ -28,19 +35,25 @@ def step():
     reward = -(state["cars_left"] + state["cars_right"])
 
     return jsonify({
-        "state": state,
+        "observation": state,
         "reward": reward,
         "done": False,
         "info": {}
     })
 
+
+# ACT
 @app.route("/act", methods=["POST"])
 def act():
     data = request.get_json(force=True)
     s = data.get("state", state)
 
     action = 0 if s["cars_left"] > s["cars_right"] else 1
-    return jsonify({"action": action})
+
+    return jsonify({
+        "action": action
+    })
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7860)
