@@ -1,48 +1,27 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from flask import Flask, jsonify
 
-app = FastAPI()
+app = Flask(__name__)
 
-state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
-
-class Action(BaseModel):
-    action: int = 0
-
-@app.get("/")
-def home():
-    return {"status": "ok"}
-
-# RESET
-@app.post("/reset")
+@app.route("/reset", methods=["POST"])
 def reset():
-    global state
-    state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
-    return {"observation": state}
+    return jsonify({"observation": {"ok": True}})
 
-# STEP
-@app.post("/step")
-def step(data: Action):
-    global state
-
-    if data.action == 0:
-        state["cars_left"] = max(0, state["cars_left"] - 1)
-    else:
-        state["cars_right"] = max(0, state["cars_right"] - 1)
-
-    reward = -(state["cars_left"] + state["cars_right"])
-
-    return {
-        "observation": state,
-        "reward": reward,
+@app.route("/step", methods=["POST"])
+def step():
+    return jsonify({
+        "observation": {"ok": True},
+        "reward": 0,
         "done": False,
         "info": {}
-    }
+    })
 
-# ACT
-@app.post("/act")
+@app.route("/act", methods=["POST"])
 def act():
-    if state["cars_left"] > state["cars_right"]:
-        action = 0
-    else:
-        action = 1
-    return {"action": action}
+    return jsonify({"action": 0})
+
+@app.route("/", methods=["GET"])
+def home():
+    return "running"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=7860)
