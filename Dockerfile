@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install flask
-
-EXPOSE 7860
+RUN pip install openai
 
 CMD ["python", "inference.py"]
