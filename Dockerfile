@@ -4,6 +4,4 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install openai
-
 CMD ["python", "inference.py"]
