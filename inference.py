@@ -1,59 +1,47 @@
-from flask import Flask, request, jsonify
+import asyncio
+from env import SmartTrafficEnv
+from agent import SmartAgent
 
-app = Flask(__name__)
+env = SmartTrafficEnv()
+agent = SmartAgent()
 
-state = {}
+def log_start():
+    print("[START] task=traffic env=openenv model=smart-agent", flush=True)
 
-# RESET (VERY IMPORTANT FORMAT)
-@app.route("/reset", methods=["POST"])
-def reset():
-    global state
-    state = {
-        "cars_left": 5,
-        "cars_right": 5,
-        "ambulance": 0
-    }
+def log_step(step, action, reward, done):
+    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error=null", flush=True)
 
-    return jsonify({
-        "observation": state
-    })
+def log_end(success, steps, score, rewards):
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
 
 
-# STEP (VERY IMPORTANT FORMAT)
-@app.route("/step", methods=["POST"])
-def step():
-    global state
+async def main():
+    rewards = []
+    steps = 0
 
-    data = request.get_json(force=True)
-    action = data.get("action", 0)
+    log_start()
 
-    if action == 0:
-        state["cars_left"] = max(0, state["cars_left"] - 1)
-    else:
-        state["cars_right"] = max(0, state["cars_right"] - 1)
+    state = env.reset()
 
-    reward = -(state["cars_left"] + state["cars_right"])
+    for step in range(1, 11):
+        action = agent.choose_action(state)
 
-    return jsonify({
-        "observation": state,
-        "reward": reward,
-        "done": False,
-        "info": {}
-    })
+        state, reward, done, _ = env.step(action)
 
+        rewards.append(reward)
+        steps = step
 
-# ACT
-@app.route("/act", methods=["POST"])
-def act():
-    data = request.get_json(force=True)
-    s = data.get("state", state)
+        log_step(step, action, reward, done)
 
-    action = 0 if s["cars_left"] > s["cars_right"] else 1
+        if done:
+            break
 
-    return jsonify({
-        "action": action
-    })
+    score = max(0, min(1, sum(rewards) / 100))  # normalize
+    success = score > 0.1
+
+    log_end(success, steps, score, rewards)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7860)
+    asyncio.run(main())
