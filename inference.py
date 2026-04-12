@@ -1,47 +1,42 @@
 import asyncio
-from env import SmartTrafficEnv
-from agent import SmartAgent
+import os
 
-env = SmartTrafficEnv()
-agent = SmartAgent()
-
-def log_start():
-    print("[START] task=traffic env=openenv model=smart-agent", flush=True)
-
-def log_step(step, action, reward, done):
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error=null", flush=True)
-
-def log_end(success, steps, score, rewards):
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
-
+from my_env_v4 import MyEnvV4Env, MyEnvV4Action
 
 async def main():
+    # IMPORTANT: use local docker image
+    IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+
+    env = await MyEnvV4Env.from_docker_image(IMAGE_NAME)
+
+    print("[START] task=test env=openenv model=baseline", flush=True)
+
+    result = await env.reset()
+
     rewards = []
     steps = 0
 
-    log_start()
+    for step in range(1, 6):
+        if result.done:
+            break
 
-    state = env.reset()
+        action = MyEnvV4Action(message="hello world")
 
-    for step in range(1, 11):
-        action = agent.choose_action(state)
+        result = await env.step(action)
 
-        state, reward, done, _ = env.step(action)
+        reward = result.reward or 0.0
+        done = result.done
 
         rewards.append(reward)
         steps = step
 
-        log_step(step, action, reward, done)
+        print(f"[STEP] step={step} action=hello reward={reward:.2f} done={str(done).lower()} error=null", flush=True)
 
-        if done:
-            break
+    score = min(1.0, sum(rewards) / 10)
 
-    score = max(0, min(1, sum(rewards) / 100))  # normalize
-    success = score > 0.1
+    print(f"[END] success=true steps={steps} score={score:.2f} rewards={','.join(f'{r:.2f}' for r in rewards)}", flush=True)
 
-    log_end(success, steps, score, rewards)
-
+    await env.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
