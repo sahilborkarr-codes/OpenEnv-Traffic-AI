@@ -18,12 +18,10 @@ def log_end(steps):
 
 async def main():
     log_start()
-
     steps = 3
     for i in range(1, steps + 1):
         done = (i == steps)
         log_step(i, done)
-
     log_end(steps)
 
 if __name__ == "__main__":
