@@ -1,42 +1,48 @@
-import asyncio
-import os
+from fastapi import FastAPI
+from pydantic import BaseModel
 
-from my_env_v4 import MyEnvV4Env, MyEnvV4Action
+app = FastAPI()
 
-async def main():
-    # IMPORTANT: use local docker image
-    IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
 
-    env = await MyEnvV4Env.from_docker_image(IMAGE_NAME)
+class Action(BaseModel):
+    action: int = 0
 
-    print("[START] task=test env=openenv model=baseline", flush=True)
+@app.get("/")
+def home():
+    return {"status": "ok"}
 
-    result = await env.reset()
+# RESET
+@app.post("/reset")
+def reset():
+    global state
+    state = {"cars_left": 5, "cars_right": 5, "ambulance": 0}
+    return {"observation": state}
 
-    rewards = []
-    steps = 0
+# STEP
+@app.post("/step")
+def step(data: Action):
+    global state
 
-    for step in range(1, 6):
-        if result.done:
-            break
+    if data.action == 0:
+        state["cars_left"] = max(0, state["cars_left"] - 1)
+    else:
+        state["cars_right"] = max(0, state["cars_right"] - 1)
 
-        action = MyEnvV4Action(message="hello world")
+    reward = -(state["cars_left"] + state["cars_right"])
 
-        result = await env.step(action)
+    return {
+        "observation": state,
+        "reward": reward,
+        "done": False,
+        "info": {}
+    }
 
-        reward = result.reward or 0.0
-        done = result.done
-
-        rewards.append(reward)
-        steps = step
-
-        print(f"[STEP] step={step} action=hello reward={reward:.2f} done={str(done).lower()} error=null", flush=True)
-
-    score = min(1.0, sum(rewards) / 10)
-
-    print(f"[END] success=true steps={steps} score={score:.2f} rewards={','.join(f'{r:.2f}' for r in rewards)}", flush=True)
-
-    await env.close()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# ACT
+@app.post("/act")
+def act():
+    if state["cars_left"] > state["cars_right"]:
+        action = 0
+    else:
+        action = 1
+    return {"action": action}
